@@ -1,4 +1,19 @@
-# Only Climb API — Project Guidelines
+# Only Climb API — AI System Context
+
+## Knowledge Map
+
+This project uses layered instruction files. Each is loaded automatically when relevant:
+
+| File | Loaded when | Content |
+|---|---|---|
+| This file | Always | Architecture, tech stack, naming, build |
+| `business-rules.instructions.md` | Any source file | Domain concepts, invariants, auth, API design |
+| `domain-layer.instructions.md` | `domain/**` | Pure Java rules, ports, value objects |
+| `application-layer.instructions.md` | `application/**` | Service orchestration rules |
+| `infrastructure-layer.instructions.md` | `infrastructure/**` | Spring, JPA, REST adapter rules |
+| `testing.instructions.md` | `src/test/**` | Test strategy per layer |
+
+---
 
 ## Architecture: Hexagonal (Ports & Adapters)
 
