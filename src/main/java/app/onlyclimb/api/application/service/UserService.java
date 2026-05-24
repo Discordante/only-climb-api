@@ -9,6 +9,7 @@ import app.onlyclimb.api.domain.model.Height;
 import app.onlyclimb.api.domain.model.User;
 import app.onlyclimb.api.domain.model.UserProfile;
 import app.onlyclimb.api.domain.model.Weight;
+import app.onlyclimb.api.domain.port.in.DeleteUserUseCase;
 import app.onlyclimb.api.domain.port.in.GetUserProfileUseCase;
 import app.onlyclimb.api.domain.port.in.GetUserUseCase;
 import app.onlyclimb.api.domain.port.in.RegisterUserCommand;
@@ -26,7 +27,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class UserService
-        implements RegisterUserUseCase, GetUserUseCase,
+        implements RegisterUserUseCase, GetUserUseCase, DeleteUserUseCase,
                    UpdateUserProfileUseCase, GetUserProfileUseCase {
 
     private final UserRepository userRepository;
@@ -41,6 +42,9 @@ public class UserService
 
         return userRepository.findByAuthIdentity(provider, externalId)
                 .map(existing -> {
+                    if (!existing.getEmail().equals(email)) {
+                        existing.changeEmail(email);
+                    }
                     existing.recordLogin();
                     return userRepository.save(existing);
                 })
@@ -82,6 +86,16 @@ public class UserService
         }
         return userProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new UserProfileNotFoundException(userId));
+    }
+
+    @Override
+    @Transactional
+    public void deleteByAuthIdentity(AuthProvider authProvider, String externalUserId) {
+        userRepository.findByAuthIdentity(authProvider, externalUserId)
+                .ifPresent(user -> {
+                    user.softDelete();
+                    userRepository.save(user);
+                });
     }
 
     @Override
