@@ -1,9 +1,12 @@
 package app.onlyclimb.api.infrastructure.adapter.in.web;
 
+import app.onlyclimb.api.domain.exception.AssessmentDefinitionNotFoundException;
+import app.onlyclimb.api.domain.exception.AssessmentResultNotFoundException;
 import app.onlyclimb.api.domain.exception.ContentOwnershipException;
 import app.onlyclimb.api.domain.exception.DuplicateUserException;
 import app.onlyclimb.api.domain.exception.ExerciseNotFoundException;
 import app.onlyclimb.api.domain.exception.GoalNotFoundException;
+import app.onlyclimb.api.domain.exception.InvalidAssessmentResultException;
 import app.onlyclimb.api.domain.exception.InvalidExerciseConfigException;
 import app.onlyclimb.api.domain.exception.InvalidGradeException;
 import app.onlyclimb.api.domain.exception.PlatformContentImmutableException;
@@ -27,12 +30,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({UserNotFoundException.class, UserProfileNotFoundException.class,
             ExerciseNotFoundException.class, WorkoutTemplateNotFoundException.class,
-            WorkoutLogNotFoundException.class, GoalNotFoundException.class})
+            WorkoutLogNotFoundException.class, GoalNotFoundException.class,
+            AssessmentDefinitionNotFoundException.class, AssessmentResultNotFoundException.class})
     public ProblemDetail handleNotFound(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
-    @ExceptionHandler({InvalidExerciseConfigException.class, InvalidGradeException.class})
+    @ExceptionHandler({InvalidExerciseConfigException.class, InvalidGradeException.class,
+            InvalidAssessmentResultException.class})
     public ProblemDetail handleInvalidConfig(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
