@@ -15,6 +15,32 @@ The domain is the innermost layer. It must remain **completely framework-free**.
 - Avoid Lombok on domain models — be explicit about what is exposed.
 - Use `final` fields where possible to enforce immutability.
 
+### Identity in the Domain
+
+Domain entities use **`UUID` as their identity**. Never use `Long` in the domain layer — that is a JPA infrastructure concern.
+
+```java
+public class Exercise {
+    private final UUID id;  // ← always UUID in domain
+    // NO Long id here
+
+    public Exercise(UUID id, ...) {
+        this.id = Objects.requireNonNull(id);
+        // ...
+    }
+}
+```
+
+Output port interfaces also use UUID:
+
+```java
+public interface ExerciseRepository {
+    Exercise save(Exercise exercise);
+    Optional<Exercise> findById(UUID id);  // ← UUID, not Long
+    List<Exercise> findAll();
+}
+```
+
 ```java
 // CORRECT
 public class Route {

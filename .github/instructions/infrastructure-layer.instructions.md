@@ -66,6 +66,71 @@ public record RouteResponse(Long id, String grade, String status) {
 - Use a Spring Data `JpaRepository` internally, but never expose it outside this adapter.
 - Map between domain entity ↔ JPA entity in the adapter (or use a dedicated mapper).
 
+### Identity Strategy (UUID + Long surrogate PK)
+
+JPA entities use a **surrogate Long PK** for performance (joins, indexes) plus a **UUID column** as the public identity. The domain entity only knows the UUID.
+
+```java
+@Entity
+@Table(name = "exercises")
+@Getter @Setter @NoArgsConstructor
+class ExerciseJpaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;                         // internal, never exposed
+
+    @Column(nullable = false, unique = true, updatable = false)
+    private UUID uuid;                        // public identity, maps to domain id
+
+    // ... other fields
+}
+```
+
+The adapter maps UUID ↔ Long transparently:
+
+```java
+@Override
+public Optional<Exercise> findById(UUID id) {
+    return springRepo.findByUuid(id).map(this::toDomain);
+}
+
+private Exercise toDomain(ExerciseJpaEntity e) {
+    return new Exercise(e.getUuid(), ...);
+}
+```
+
+**Rule:** `Long id` never leaves the persistence adapter. UUID is the only identifier that flows through domain, application, and web layers.
+
+### i18n — Translations Table Pattern
+
+For translatable platform entities, create a companion `*TranslationJpaEntity`:
+
+```java
+@Entity
+@Table(name = "exercise_translations",
+       uniqueConstraints = @UniqueConstraint(columnNames = {"exercise_id", "locale", "field"}))
+@Getter @Setter @NoArgsConstructor
+class ExerciseTranslationJpaEntity {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "exercise_id", nullable = false)
+    private ExerciseJpaEntity exercise;
+
+    @Column(nullable = false, length = 10)
+    private String locale;   // "en", "es"
+
+    @Column(nullable = false, length = 50)
+    private String field;    // "name", "description"
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String value;
+}
+```
+
+**Never add `name_en`, `name_es` columns to the entity table.**
+
 ```java
 @Entity
 @Table(name = "routes")

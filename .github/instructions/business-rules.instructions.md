@@ -235,6 +235,43 @@ Subscription check must happen in the **application service** before invoking pr
 
 ---
 
+## Data Architecture Decisions (Confirmed)
+
+### Identity Strategy
+- **Public API**: always UUID (`java.util.UUID`). Exposed in all request/response DTOs.
+- **Internal persistence**: surrogate Long PK for JPA performance (joins, indexes).
+- **Mapping**: the JPA adapter maps Long ↔ UUID. The domain entity holds the UUID as its identity. Long is an infrastructure detail — never surfaces in domain or application layers.
+
+```
+Domain entity:  UUID id  ← the real identity
+JPA entity:     Long id (PK, auto-generated) + UUID uuid (unique, indexed)
+API response:   UUID only
+```
+
+### Internationalization (i18n) Strategy
+Translatable content uses a **dedicated translations table per entity**, not columns per language.
+
+**Pattern:**
+```
+exercise                         exercise_translation
+────────────────────             ────────────────────────────────
+id (Long, PK)                    id (Long, PK)
+uuid (UUID, unique)              exercise_id (Long, FK → exercise.id)
+category                         locale (VARCHAR, e.g. "en", "es")
+...                              field  (VARCHAR, e.g. "name", "description")
+                                 value  (TEXT)
+```
+
+**Rules:**
+- Only PLATFORM content is translated by the platform. USER_CREATED content is stored as-is.
+- Supported locales at launch: `en` (required, fallback), `es`.
+- If a translation for the requested locale does not exist, fall back to `en`.
+- The API reads the desired locale from the `Accept-Language` header.
+- **Never add `name_en`, `name_es`, `description_en`, `description_es` columns** to entity tables — this does not scale and requires schema changes per new language.
+- Entities that require translation: `Exercise`, `WorkoutTemplate`, `TrainingPlan`, `AssessmentDefinition`, `ExerciseCategory`, `GoalType`.
+
+---
+
 ## What NOT to Do
 
 - Do not add multi-sport support — scope is climbing only.
@@ -243,3 +280,4 @@ Subscription check must happen in the **application service** before invoking pr
 - Do not put i18n columns directly on entity tables (`name_en`, `name_es`) — use a translations table.
 - Do not make `AssessmentResult` mutable — it is a historical record.
 - Do not expose internal Long IDs in the API — always use UUIDs externally.
+- Do not use the domain entity's Long PK anywhere outside the persistence adapter.
