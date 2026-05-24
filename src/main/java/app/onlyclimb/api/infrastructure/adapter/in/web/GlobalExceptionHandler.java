@@ -7,6 +7,7 @@ import app.onlyclimb.api.domain.exception.InvalidExerciseConfigException;
 import app.onlyclimb.api.domain.exception.PlatformContentImmutableException;
 import app.onlyclimb.api.domain.exception.UserNotFoundException;
 import app.onlyclimb.api.domain.exception.UserProfileNotFoundException;
+import app.onlyclimb.api.domain.exception.WorkoutLogNotFoundException;
 import app.onlyclimb.api.domain.exception.WorkoutTemplateNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -23,7 +24,8 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler({UserNotFoundException.class, UserProfileNotFoundException.class,
-            ExerciseNotFoundException.class, WorkoutTemplateNotFoundException.class})
+            ExerciseNotFoundException.class, WorkoutTemplateNotFoundException.class,
+            WorkoutLogNotFoundException.class})
     public ProblemDetail handleNotFound(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
     }
