@@ -17,7 +17,7 @@ class SvixSignatureVerifierTest {
     private static final String SECRET = "whsec_" + Base64.getEncoder().encodeToString(KEY_BYTES);
 
     private final SvixSignatureVerifier verifier =
-            new SvixSignatureVerifier(new ClerkProperties(null, null, SECRET));
+            new SvixSignatureVerifier(new ClerkProperties(null, null, SECRET, null));
 
     @Test
     void verifiesValidSignature() {

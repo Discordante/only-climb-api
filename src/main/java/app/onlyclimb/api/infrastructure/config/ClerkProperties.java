@@ -12,11 +12,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *       fetches the public keys lazily on the first authenticated request.</li>
  *   <li>{@code webhookSigningSecret}: the {@code whsec_*} secret from the Clerk
  *       webhook dashboard. Used to verify Svix-signed payloads.</li>
+ *   <li>{@code secretKey}: the {@code sk_*} Backend API secret key. Used for
+ *       server-to-server calls to {@code https://api.clerk.com}.</li>
  * </ul>
  */
 @ConfigurationProperties(prefix = "onlyclimb.clerk")
 public record ClerkProperties(
         String issuer,
         String jwksUri,
-        String webhookSigningSecret) {
+        String webhookSigningSecret,
+        String secretKey) {
 }
