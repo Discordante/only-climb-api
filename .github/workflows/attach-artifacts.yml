@@ -1,0 +1,40 @@
+name: Attach Artifacts to Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-attach:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: liberica
+          java-version: '25'
+          cache: maven
+
+      - name: Build & Test
+        run: ./mvnw verify --batch-mode --no-transfer-progress
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: target/surefire-reports/
+          retention-days: 7
+
+      - name: Attach JAR to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: target/*.jar
+          fail_on_unmatched_files: true
