@@ -7,6 +7,7 @@ import app.onlyclimb.api.domain.model.Email;
 import app.onlyclimb.api.domain.model.User;
 import app.onlyclimb.api.domain.model.UserProfile;
 import app.onlyclimb.api.domain.port.in.RegisterUserCommand;
+import app.onlyclimb.api.domain.port.in.ProvisionFreeSubscriptionUseCase;
 import app.onlyclimb.api.domain.port.out.UserProfileRepository;
 import app.onlyclimb.api.domain.port.out.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,7 @@ class UserServiceTest {
 
     @Mock UserRepository userRepository;
     @Mock UserProfileRepository userProfileRepository;
+    @Mock ProvisionFreeSubscriptionUseCase provisionFreeSubscriptionUseCase;
     @InjectMocks UserService service;
 
     private RegisterUserCommand cmd;

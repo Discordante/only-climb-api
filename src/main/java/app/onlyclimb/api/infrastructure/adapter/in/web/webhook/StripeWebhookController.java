@@ -49,7 +49,7 @@ public class StripeWebhookController {
     private final UserSubscriptionRepository subscriptionRepository;
     private final SubscriptionInvoiceRepository invoiceRepository;
     private final PaymentCustomerRepository customerRepository;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping
     @Operation(summary = "Handle Stripe webhook events (idempotent)")
