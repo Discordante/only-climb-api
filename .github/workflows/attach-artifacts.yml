@@ -1,4 +1,11 @@
-name: Attach Artifacts to Release
+# =============================================================================
+# Attach Artifacts to Release — CD Pipeline
+#
+# Triggered when a GitHub Release is published (by release-please).
+# Builds the JAR, attaches it to the release, builds the Docker image,
+# and pushes it to GitHub Container Registry (ghcr.io).
+# =============================================================================
+name: 🚀 Attach Artifacts
 
 on:
   release:
@@ -8,24 +15,31 @@ permissions:
   contents: write
   packages: write
 
+env:
+  JAVA_DISTRIBUTION: liberica
+  JAVA_VERSION: '25'
+
 jobs:
   build-and-attach:
+    name: 📦 Build & Publish
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout release tag
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.release.tag_name }}
 
-      - uses: actions/setup-java@v5
+      - name: Setup JDK ${{ env.JAVA_VERSION }} (${{ env.JAVA_DISTRIBUTION }})
+        uses: actions/setup-java@v5
         with:
-          distribution: liberica
-          java-version: '25'
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
           cache: maven
 
       - name: Build & Test
         run: ./mvnw verify --batch-mode --no-transfer-progress
 
-      - name: Upload Test Reports
+      - name: Upload surefire test reports
         if: always()
         uses: actions/upload-artifact@v5
         with:
@@ -33,13 +47,19 @@ jobs:
           path: target/surefire-reports/
           retention-days: 7
 
-      - name: Attach JAR to Release
+      # -----------------------------------------------------------------------
+      # Attach JAR to the GitHub Release
+      # -----------------------------------------------------------------------
+      - name: Attach JAR to release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.release.tag_name }}
           files: target/*.jar
           fail_on_unmatched_files: true
 
+      # -----------------------------------------------------------------------
+      # Docker — build image and push to GitHub Container Registry
+      # -----------------------------------------------------------------------
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v4
         with:
@@ -47,7 +67,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract version from tag
+      - name: Extract version from git tag
         id: version
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
@@ -57,5 +77,6 @@ jobs:
           context: .
           push: true
           tags: |
+            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.VERSION }}
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ steps.version.outputs.VERSION }}
